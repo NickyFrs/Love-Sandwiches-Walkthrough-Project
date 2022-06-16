@@ -1,21 +1,18 @@
 import gspread
 from google.oauth2.service_account import Credentials
 from pprint import pprint
+
 SCOPE = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive.file",
     "https://www.googleapis.com/auth/drive"
     ]
 
-CREDS = Credentials.from_service_account_file("creds.json")
+CREDS = Credentials.from_service_account_file('creds.json')
 SCOPED_CREDS = CREDS.with_scopes(SCOPE)
 GSPREAD_CLIENT = gspread.authorize(SCOPED_CREDS)
-SHEET = GSPREAD_CLIENT.open("love_sandwiches")
+SHEET = GSPREAD_CLIENT.open('love_sandwiches')
 
-# sales = SHEET.worksheet("sales")
-
-# data = sales.get_all_values()
-# print(sales)
 
 def get_sales_data():
     """
@@ -55,7 +52,9 @@ def validate_data(values):
     except ValueError as e:
         print(f"Invalid data: {e}, please try again.\n")
         return False
+
     return True
+
 
 def update_sales_worksheet(data):
     """
@@ -74,11 +73,22 @@ def calculate_surplus_data(sales_row):
     - Positive surplus indicates waste
     - Negative surplus indicates extra made when stock was sold out.
     """
-    print("Calculating surplus data... \n")
+    print("Calculating surplus data...\n")
     stock = SHEET.worksheet("stock").get_all_values()
-    stock_row = SHEET.worksheet("stock").tail(1)
-    pprint(stock)
-    pprint(stock_row)
+    stock_row = stock[-1]
+    print(f"stock row: {stock_row}")
+    print(f"sales row: {sales_row}")
+    
+    surplus_data = []
+    for stock, sales in zip(stock_row, sales_row):
+        surplus = int(stock) - sales
+        surplus_data.append(surplus)
+    print(surplus_data)
+    
+    surplus_worksheet = SHEET.worksheet("surplus")
+    surplus_worksheet.append_row(surplus_data)
+    print("Surplus worksheet updated successfully.\n")
+        
 
 def main():
     """
@@ -89,5 +99,6 @@ def main():
     update_sales_worksheet(sales_data)
     calculate_surplus_data(sales_data)
 
-print("Welcome to love sandwiches data automation")
+
+print("Welcome to Love Sandwiches Data Automation")
 main()
